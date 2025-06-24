@@ -22,7 +22,7 @@ class BookMarketAnalyzer:
         self.author_finder = AuthorFinder()
         self.yes24_crawler = Yes24Crawler()
         
-    def analyze_keyword(self, keyword, days=30, find_authors=True, find_competitors=True, it_books_only=False):
+    def analyze_keyword(self, keyword, days=30, find_authors=True, find_competitors=True, it_books_only=False, top_books_count=10):
         """
         키워드를 분석하여 트렌드와 저자 정보를 제공합니다.
         
@@ -32,6 +32,7 @@ class BookMarketAnalyzer:
             find_authors: 저자 검색 여부
             find_competitors: 경쟁서 분석 여부
             it_books_only: IT 도서만 검색할지 여부
+            top_books_count: 상위 도서 표시 개수 (기본값: 10)
         """
         print(f"\n📊 '{keyword}' 키워드 분석을 시작합니다...")
         print("=" * 50)
@@ -104,7 +105,7 @@ class BookMarketAnalyzer:
             competitor_books = self.yes24_crawler.search_books(keyword, 10, it_books_only)
             
             if competitor_books:
-                analysis = self.yes24_crawler.get_competitor_analysis(competitor_books)
+                analysis = self.yes24_crawler.get_competitor_analysis(competitor_books, top_books_count)
                 self.yes24_crawler.print_analysis_result(analysis, keyword)
             else:
                 print("❌ 경쟁서 정보를 찾을 수 없습니다.")
@@ -181,6 +182,7 @@ def main():
   python main.py "데이터과학" --no-authors      # 저자 검색 제외
   python main.py "블록체인" --no-competitors    # 경쟁서 분석 제외
   python main.py "파이썬" --it-books-only      # IT 도서만 검색
+  python main.py "인공지능" --top-books 20      # 상위 도서 20개 표시
         """
     )
     
@@ -227,6 +229,13 @@ def main():
         help='IT 도서만 검색 (YES24 경쟁서 분석시)'
     )
     
+    parser.add_argument(
+        '--top-books',
+        type=int,
+        default=10,
+        help='상위 도서 표시 개수 (기본값: 10)'
+    )
+    
     args = parser.parse_args()
     
     # 분석기 초기화
@@ -249,7 +258,8 @@ def main():
                     args.days, 
                     not args.no_authors,
                     not args.no_competitors,
-                    args.it_books_only
+                    args.it_books_only,
+                    args.top_books
                 )
             else:
                 # 여러 키워드를 각각 분석
@@ -260,7 +270,8 @@ def main():
                         args.days, 
                         not args.no_authors,
                         not args.no_competitors,
-                        args.it_books_only
+                        args.it_books_only,
+                        args.top_books
                     )
                     results.append(result)
                 result = results

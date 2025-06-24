@@ -57,7 +57,9 @@ class Yes24Crawler:
                 # 일반 검색
                 params = {
                     'domain': 'ALL',
-                    'query': keyword
+                    'query': keyword,
+                    'page': 1,
+                    'size': max_results
                 }
                 print(f"🔍 YES24에서 '{keyword}' 검색 중...")
             
@@ -156,6 +158,11 @@ class Yes24Crawler:
             title = title_elem.get_text().strip()
             if len(title) > 3:
                 book_info['title'] = title
+                # 링크 URL 추출
+                if title_elem.get('href'):
+                    book_info['link'] = self.base_url + title_elem.get('href')
+                else:
+                    book_info['link'] = '링크 없음'
             else:
                 return None
         else:
@@ -258,7 +265,8 @@ class Yes24Crawler:
                             'author': '저자 정보 없음',
                             'price': '가격 정보 없음',
                             'search_keyword': keyword,
-                            'source': 'yes24'
+                            'source': 'yes24',
+                            'link': self.base_url + link.get('href') if link.get('href') else '링크 없음'
                         })
                         
                         if len(books) >= max_results:
@@ -271,9 +279,13 @@ class Yes24Crawler:
         
         return books
     
-    def get_competitor_analysis(self, books):
+    def get_competitor_analysis(self, books, top_books_count=10):
         """
         수집된 도서 데이터를 분석하여 경쟁서 분석 정보를 제공합니다.
+        
+        Args:
+            books: 분석할 도서 목록
+            top_books_count: 상위 도서 표시 개수 (기본값: 10)
         """
         if not books:
             return {}
@@ -283,7 +295,7 @@ class Yes24Crawler:
             'publishers': {},
             'price_range': {'min': float('inf'), 'max': 0, 'avg': 0},
             'sales_index_range': {'min': float('inf'), 'max': 0, 'avg': 0},
-            'top_books': books[:5],
+            'top_books': books[:top_books_count],
             'publisher_analysis': {}
         }
         
@@ -369,6 +381,12 @@ class Yes24Crawler:
             print(f"\n🔥 상위 도서:")
             for i, book in enumerate(analysis['top_books'], 1):
                 print(f"  {i}. {book['title'][:40]}")
+                print(f"     저자: {book['author']}")
                 print(f"     출판사: {book['publisher']} | 판매지수: {book['sales_index']}")
+                if book.get('price') and book['price'] != '가격 정보 없음':
+                    print(f"     가격: {book['price']}원")
+                if book.get('link') and book['link'] != '링크 없음':
+                    print(f"     링크: {book['link']}")
+                print()
         
         print("=" * 50)
