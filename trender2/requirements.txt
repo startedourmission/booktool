@@ -1,0 +1,8 @@
+beautifulsoup4
+scikit-learn
+pandas
+numpy
+plotext
+requests
+plotly
+kaleido
